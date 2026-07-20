@@ -1,0 +1,13 @@
+celery==5.4.*
+redis==5.1.*
+pydantic-settings==2.6.*
+opencv-python-headless==4.10.*
+numpy==2.1.*
+anthropic==0.40.*
+moviepy==2.2.*
+
+# NOTE: torch, flash-attn, xformers, transformers, dashscope, sam2, whisper,
+# librosa, and the rest of the Wan2.2 model stack are intentionally NOT
+# pinned here. Install them from the vendored Wan2.2 repo's own requirements
+# files (see docker/Dockerfile.worker and scripts/clone_wan_repo.sh) so
+# versions stay in lockstep with whatever the model actually needs.

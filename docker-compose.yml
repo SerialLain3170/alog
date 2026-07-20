@@ -1,0 +1,85 @@
+x-worker-base: &worker-base
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.worker
+  env_file: .env
+  volumes:
+    - /data/shasegawa:/data/shasegawa
+  depends_on:
+    - redis
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    volumes:
+      - /data/shasegawa:/data/shasegawa
+    depends_on:
+      - redis
+
+  # One worker service per GPU by default (single-GPU jobs, FP8/offload).
+  # To shard a single job across all 4 GPUs via FSDP instead, replace these
+  # four services with one worker service with WORKER_GPUS=0,1,2,3 listing
+  # all four device_ids on that single service.
+  worker-gpu0:
+    <<: *worker-base
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_GPUS=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+
+  worker-gpu1:
+    <<: *worker-base
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_GPUS=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+
+  worker-gpu2:
+    <<: *worker-base
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_GPUS=2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["2"]
+              capabilities: [gpu]
+
+  worker-gpu3:
+    <<: *worker-base
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_GPUS=3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["3"]
+              capabilities: [gpu]

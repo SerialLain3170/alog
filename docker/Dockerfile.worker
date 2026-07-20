@@ -1,0 +1,31 @@
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip git ffmpeg curl \
+    && rm -rf /var/lib/apt/lists/*
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+WORKDIR /srv
+
+COPY requirements-worker.txt .
+RUN pip install --no-cache-dir -r requirements-worker.txt
+
+# The actual Wan2.2 repo lives on shared host storage at
+# /data/shasegawa/vendor/Wan2.2 (bind-mounted at runtime, see
+# docker-compose.yml), outside this image's build context, so its
+# requirements files are fetched directly instead of COPY'd. Pin these to the
+# same commit/branch scripts/clone_wan_repo.sh checks out.
+# - requirements.txt: base Wan2.2 stack (torch, transformers, dashscope, ...)
+# - requirements_animate.txt: adds SAM2 (used by our matting stage, not just Wan-Animate's own preprocessing)
+# - requirements_s2v.txt: adds openai-whisper + librosa (used by our audio scene-parsing stage)
+RUN curl -fsSL https://raw.githubusercontent.com/Wan-Video/Wan2.2/main/requirements.txt -o /tmp/wan-requirements.txt \
+    && curl -fsSL https://raw.githubusercontent.com/Wan-Video/Wan2.2/main/requirements_animate.txt -o /tmp/wan-requirements-animate.txt \
+    && curl -fsSL https://raw.githubusercontent.com/Wan-Video/Wan2.2/main/requirements_s2v.txt -o /tmp/wan-requirements-s2v.txt
+RUN pip install --no-cache-dir -r /tmp/wan-requirements.txt \
+    && pip install --no-cache-dir -r /tmp/wan-requirements-animate.txt \
+    && pip install --no-cache-dir -r /tmp/wan-requirements-s2v.txt
+
+COPY app ./app
+COPY worker ./worker
+
+CMD ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "--concurrency=1"]
