@@ -7,13 +7,10 @@ replacement mode.
 
 <table>
 <tr>
-<td><video src="assets/demo/miku_airport.mp4" controls width="400"></video></td>
-<td><video src="assets/demo/miku_street.mp4" controls width="400"></video></td>
+<td><img src="assets/demo/miku_airport.gif" width="400"><br><a href="assets/demo/miku_airport.mp4">full-quality mp4</a></td>
+<td><img src="assets/demo/miku_street.gif" width="400"><br><a href="assets/demo/miku_street.mp4">full-quality mp4</a></td>
 </tr>
 </table>
-
-*(If your viewer doesn't render inline video, the files are at
-`assets/demo/miku_airport.mp4` and `assets/demo/miku_street.mp4`.)*
 
 ## Why SCAIL-2
 
